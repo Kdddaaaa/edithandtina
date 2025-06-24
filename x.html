@@ -6,20 +6,80 @@
     <title>GNIHTEMOS Shop - Horror Stories</title>
     <style>
         body {
+            position: relative;
+            overflow-x: hidden;
             background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
             color: #e0e0e0;
             line-height: 1.6;
             min-height: 100vh;
-            overflow-x: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        /* 血滴背景效果 */
+        .blood-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .blood-drip {
+            position: absolute;
+            top: -100px;
+            width: 8px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0), #d60000, #a60000 80%, #6a0000 100%);
+            animation: drip 8s linear infinite;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 0 20px #a60000, 0 0 6px #ff0000;
+            opacity: 0.85;
+        }
+        .blood-drip::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 22px;
+            height: 22px;
+            background: radial-gradient(circle at 60% 40%, #ff0000 0%, #a60000 80%, transparent 100%);
+            left: -7px;
+            z-index: 2;
+            opacity: 0.9;
+        }
+        @keyframes drip {
+            0% {
+                height: 0;
+                top: -100px;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            20% {
+                height: 20vh;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                height: 60vh;
+                top: 100vh;
+                opacity: 0;
+            }
+        }
+        header, nav, .container, footer {
+            position: relative;
+            z-index: 200;
+        }
+        #modal, #jump-scare {
+            z-index: 1000 !important;
         }
         header {
             background: linear-gradient(to right, #2d0939, #1a0630);
             padding: 1.5rem;
             text-align: center;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
-            position: relative;
-            z-index: 10;
         }
         h1 {
             font-size: 3rem;
@@ -148,6 +208,8 @@
             margin-top: 3rem;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
             border: 1px solid #ff6b6b33;
+            position: relative;
+            z-index: 10;
         }
         .cart h2 {
             font-size: 1.8rem;
@@ -183,11 +245,12 @@
             padding: 2rem;
             margin-top: 3rem;
             border-top: 1px solid #ff6b6b33;
+            position: relative;
+            z-index: 10;
         }
         footer p {
             color: #bbb;
         }
-        /* Modal Styles */
         #modal {
             display: none;
             position: fixed;
@@ -249,7 +312,6 @@
             border-radius: 8px;
             border: 1px solid #ff6b6b33;
         }
-        /* Jump Scare Effect */
         #jump-scare {
             display: none;
             position: fixed;
@@ -258,7 +320,7 @@
             width: 100vw;
             height: 100vh;
             background: #000;
-            z-index: 2000;
+            z-index: 10000 !important;
             justify-content: center;
             align-items: center;
             animation: scare 0.5s forwards;
@@ -274,35 +336,26 @@
             20% { opacity: 1; transform: scale(1.1);}
             100% { opacity: 0; transform: scale(1);}
         }
-        /* Responsive */
-        @media (max-width: 768px) {
-            .products {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-            nav a {
-                margin: 0 0.8rem;
-                font-size: 1rem;
-            }
-            h1 {
-                font-size: 2.2rem;
-            }
+        /* 红色震动血字效果 */
+        .red-blood {
+            color: #ff2323;
+            font-weight: bold;
+            display: inline-block;
+            animation: blood-shake 0.25s infinite alternate;
+            text-shadow: 0 0 6px #900, 0 0 12px #f00;
         }
-        @media (max-width: 480px) {
-            .product-buttons {
-                flex-direction: column;
-            }
-            nav {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            nav a {
-                margin: 0.3rem 0;
-            }
+        @keyframes blood-shake {
+            0% { transform: translate(0, 0) rotate(-2deg);}
+            20% { transform: translate(-1px, 1px) rotate(2deg);}
+            40% { transform: translate(1px, -2px) rotate(-1deg);}
+            60% { transform: translate(-2px, 1px) rotate(1deg);}
+            80% { transform: translate(2px, 0) rotate(-2deg);}
+            100% { transform: translate(0, -1px) rotate(2deg);}
         }
     </style>
 </head>
 <body>
+    <div class="blood-background" id="blood-background"></div>
     <header>
         <h1>GNIHTEMOS</h1>
         <p class="tagline">ShopX$ - Where Horror Comes Alive</p>
@@ -316,9 +369,7 @@
     </nav>
     <div class="container">
         <h2 class="section-title">Featured Horror Stories</h2>
-        <div class="products" id="product-list">
-            <!-- Products will be inserted here by JavaScript -->
-        </div>
+        <div class="products" id="product-list"></div>
         <div class="cart" id="cart">
             <h2>Your Cart</h2>
             <ul id="cart-items"></ul>
@@ -328,7 +379,6 @@
     <footer>
         <p>&copy; 2025 GNIHTEMOS. All rights reserved. Enter at your own risk.</p>
     </footer>
-    <!-- Modal for product details -->
     <div id="modal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">&times;</button>
@@ -336,22 +386,20 @@
             <div id="modal-content"></div>
         </div>
     </div>
-    <!-- Jump Scare Element -->
     <div id="jump-scare">
         <img src="https://cdn.pixabay.com/animation/2023/03/12/13/47/13-47-31-775_512.gif" alt="Jump Scare GIF">
     </div>
     <script>
-        // Sample products with horror story content
         const products = [
             { 
                 id: 1, 
-                name: "SCRET1: 誤入禁地 ", 
+                name: "SCRET1: 誤入禁地", 
                 price: 59.99, 
                 content: `第一章：誤入禁地
 
-在一片被濃霧吞噬的荒野，垃圾人1號和垃圾人2號迷路後誤闖了一座廢棄的屠宰場。村裡的老人曾警告，這地方被詛咒，進去的人從未活着出來。空氣中瀰漫着令人窒息的腐臭，牆壁上覆滿乾涸的血跡和黏稠的膿液，地上散落着生鏽的鉤子和碎裂的骨頭。垃圾人1號手握一根撿來的鐵棒，硬着头皮往前走，嘲笑垃圾人2號的膽小：“這不過是個破地方，怕什麼？”垃圾人2號緊跟在後，卻不小心踩到一團蠕動的蛆蟲，裹着腐爛的肉塊，尖叫聲在空蕩的走廊迴盪。她抬頭時，發現天花板上懸掛着破布條，滲出黃綠色的液體，滴在她臉上，散發出酸腐的惡臭。
+在一片被濃霧吞噬的荒野，垃圾人1號和垃圾人2號迷路後誤闖了一座廢棄的屠宰場。村裡的老人曾警告，這地方被詛咒，進去的人從未活着出來。空氣中瀰漫着令人窒息的腐臭，牆壁上覆滿乾涸的<span class="red-blood">血</span>跡和黏稠的膿液，地上散落着生鏽的鉤子和碎裂的骨頭。垃圾人1號手握一根撿來的鐵棒，硬着头皮往前走，嘲笑垃圾人2號的膽小：“這不過是個破地方，怕什麼？”垃圾人2號緊跟在後，卻不小心踩到一團蠕動的蛆蟲，裹着腐爛的肉塊，尖叫聲在空蕩的走廊迴盪。她抬頭時，發現天花板上懸掛着破布條，滲出黃綠色的液體，滴在她臉上，散發出酸腐的惡臭。
 
-突然，一陣低沉的咕嚕聲從黑暗深處傳來，像是有什麼在咀嚼。垃圾人1號舉起鐵棒，壯着膽子靠近，卻看見地上有一灘鮮血，還在緩緩流動。血跡通向一具被剝皮的屍體，腸子拖在地上，爬滿蒼蠅。屍體的頭顱緩緩轉動，空洞的眼窩直勾勾盯着她們，嘴角裂開，露出鋸齒般的牙。垃圾人2號嚇得癱坐在地，尿液混雜着血水流淌。垃圾人1號試圖保持冷靜，但她的手在顫抖。`
+突然，一陣低沉的咕嚕聲從黑暗深處傳來，像是有什麼在咀嚼。垃圾人1號舉起鐵棒，壯着膽子靠近，卻看見地上有一灘鮮<span class="red-blood">血</span>，還在緩緩流動。<span class="red-blood">血</span>跡通向一具被剝皮的屍體，腸子拖在地上，爬滿蒼蠅。屍體的頭顱緩緩轉動，空洞的眼窩直勾勾盯着她們，嘴角裂開，露出鋸齒般的牙。垃圾人2號嚇得癱坐在地，尿液混雜着<span class="red-blood">血</span>水流淌。垃圾人1號試圖保持冷靜，但她的手在顫抖。`
             },
             { 
                 id: 2, 
@@ -361,7 +409,7 @@
 
 垃圾人1號拉着垃圾人2號試圖逃跑，但屍體突然動了，像被無形之線操縱的木偶，斷裂的骨頭咔咔作響，爬向她們。它伸出一隻腐爛的手，指甲如刀，抓向垃圾人1號的臉。垃圾人1號揮棒砸斷了它的手臂，斷肢處噴出黑綠色的膿液，濺到她身上，燒灼着皮膚，冒出白煙。她強忍劇痛，喊道：“快跑！”但垃圾人2號已被嚇得動彈不得。
 
-屠宰場的牆壁開始滲血，像活了一樣蠕動，發出低沉的呻吟。地面裂開，露出一張張扭曲的人臉，吐出淒厲的尖叫。垃圾人1號拖着垃圾人2號奔向走廊盡頭，卻發現出口被一堵血肉之牆封死。牆上長出數十張嘴，吐出膿液和斷裂的指甲，嘶啞地低語：“留下…永遠留下…”垃圾人2號崩潰尖叫，卻被一團從地底冒出的血肉纏住，拖向裂縫。垃圾人1號試圖抓住她，但血肉像活蟲般鑽進垃圾人2號的皮膚，她慘叫着消失在黑暗中。
+屠宰場的牆壁開始滲<span class="red-blood">血</span>，像活了一樣蠕動，發出低沉的呻吟。地面裂開，露出一張張扭曲的人臉，吐出淒厲的尖叫。垃圾人1號拖着垃圾人2號奔向走廊盡頭，卻發現出口被一堵<span class="red-blood">血</span>肉之牆封死。牆上長出數十張嘴，吐出膿液和斷裂的指甲，嘶啞地低語：“留下…永遠留下…”垃圾人2號崩潰尖叫，卻被一團從地底冒出的<span class="red-blood">血</span>肉纏住，拖向裂縫。垃圾人1號試圖抓住她，但<span class="red-blood">血</span>肉像活蟲般鑽進垃圾人2號的皮膚，她慘叫着消失在黑暗中。
 
 垃圾人1號獨自逃向另一條通道，卻發現牆壁上刻滿了詛咒符文，散發出微弱的紅光。她的手臂被膿液燒傷的傷口開始化膿，散發出腐臭，彷彿有什麼在傷口裡蠕動。她咬牙撕下袖子包紮，卻聽到身後傳來垃圾人2號的聲音：“垃圾人1號…救我…”她回頭，卻只看到一團不成人形的肉塊，拖着垃圾人2號的斷肢緩緩逼近。`
             },
@@ -371,11 +419,11 @@
                 price: 39.99, 
                 content: `第三章：蛆蟲之巢
 
-垃圾人1號踉蹌跑進一個巨大的地下室，地面覆滿黏稠的黑色液體，散發出濃烈的腐臭。她踩到的每一步，都能感覺到液體裡有東西在蠕動。手電筒的光芒掃過，照出一堆堆白花花的蛆蟲，堆積成小山，上面點綴着腐爛的器官和眼球。中央聳立着一座由骨頭和血肉堆成的祭壇，祭壇上有一顆巨大的心臟，仍在緩慢跳動，每次收縮都噴出膿液。
+垃圾人1號踉蹌跑進一個巨大的地下室，地面覆滿黏稠的黑色液體，散發出濃烈的腐臭。她踩到的每一步，都能感覺到液體裡有東西在蠕動。手電筒的光芒掃過，照出一堆堆白花花的蛆蟲，堆積成小山，上面點綴着腐爛的器官和眼球。中央聳立着一座由骨頭和<span class="red-blood">血</span>肉堆成的祭壇，祭壇上有一顆巨大的心臟，仍在緩慢跳動，每次收縮都噴出膿液。
 
-垃圾人1號強忍嘔吐，試圖繞過祭壇，卻聽到一陣低沉的笑聲。一個身影從蛆蟲堆中爬出，身軀由腐肉和斷骨拼湊，頭部是一張扭曲的臉，半邊是垃圾人2號的模樣，半邊是蛆蟲鑽進鑽出的空洞。它用破碎的聲音說：“你…也會成為我們的一部分…”垃圾人1號揮棒砸向它，卻被一條從祭壇伸出的腐爛手臂抓住，尖銳的骨刺刺穿她的小腿，鮮血混雜着膿液流淌。
+垃圾人1號強忍嘔吐，試圖繞過祭壇，卻聽到一陣低沉的笑聲。一個身影從蛆蟲堆中爬出，身軀由腐肉和斷骨拼湊，頭部是一張扭曲的臉，半邊是垃圾人2號的模樣，半邊是蛆蟲鑽進鑽出的空洞。它用破碎的聲音說：“你…也會成為我們的一部分…”垃圾人1號揮棒砸向它，卻被一條從祭壇伸出的腐爛手臂抓住，尖銳的骨刺刺穿她的小腿，鮮<span class="red-blood">血</span>混雜着膿液流淌。
 
-她掙脫時，祭壇上的心臟跳動加速，蛆蟲如潮水般湧向她，鑽進她的傷口，撕咬着她的血肉。垃圾人1號慘叫着用鐵棒亂砸，卻發現自己的手臂開始腐爛，皮膚下鼓起一團團蟲卵。她意識到，這地方的詛咒正在侵蝕她的身體。`
+她掙脫時，祭壇上的心臟跳動加速，蛆蟲如潮水般湧向她，鑽進她的傷口，撕咬着她的<span class="red-blood">血</span>肉。垃圾人1號慘叫着用鐵棒亂砸，卻發現自己的手臂開始腐爛，皮膚下鼓起一團團蟲卵。她意識到，這地方的詛咒正在侵蝕她的身體。`
             },
             { 
                 id: 4, 
@@ -385,9 +433,9 @@
 
 垃圾人1號拖着殞地，試圖爬向一道微弱的光芒，那是屠宰場唯一的出口。但她的身體越來越沉重，皮膚開始剝落，露出底下的腐肉和蛆蟲。垃圾人2號的聲音在她腦海中迴盪：“為什麼丟下我…你也逃不掉…”她回頭，看到無數腐爛的身影從黑暗中湧出，拖着斷肢和內臟，緩緩逼近。
 
-出口近在咫尺，但地面裂開，一隻巨大的血肉之手從地底伸出，抓住她的腰，將她拖回地下。她的尖叫被濃稠的膿液淹沒，蛆蟲鑽進她的眼睛和喉嚨，撕碎她的意識。最後一刻，她看見祭壇上的心臟裂開，噴出一團黑霧，霧中浮現無數扭曲的臉，發出滿足的嘆息。
+出口近在咫尺，但地面裂開，一隻巨大的<span class="red-blood">血</span>肉之手從地底伸出，抓住她的腰，將她拖回地下。她的尖叫被濃稠的膿液淹沒，蛆蟲鑽進她的眼睛和喉嚨，撕碎她的意識。最後一刻，她看見祭壇上的心臟裂開，噴出一團黑霧，霧中浮現無數扭曲的臉，發出滿足的嘆息。
 
-屠宰場恢復寂靜，濃霧重新籠罩。村裡的人從未找到垃圾人1號和垃圾人2號，只聽說那片禁地又多了一陣腐臭的風。沒人知道，地下深處，兩團腐爛的血肉仍在緩慢蠕動，永遠被詛咒囚禁。`
+屠宰場恢復寂靜，濃霧重新籠罩。村裡的人從未找到垃圾人1號和垃圾人2號，只聽說那片禁地又多了一陣腐臭的風。沒人知道，地下深處，兩團腐爛的<span class="red-blood">血</span>肉仍在緩慢蠕動，永遠被詛咒囚禁。`
             }
         ];
         const cart = [];
@@ -448,7 +496,7 @@
         function showContent(productId) {
             const product = products.find(p => p.id === productId);
             document.getElementById('modal-title').textContent = product.name;
-            document.getElementById('modal-content').textContent = product.content;
+            document.getElementById('modal-content').innerHTML = product.content;
             document.getElementById('modal').style.display = 'block';
         }
         function closeModal() {
@@ -459,10 +507,28 @@
             jumpScare.style.display = 'flex';
             setTimeout(() => {
                 jumpScare.style.display = 'none';
-            }, 1100); // Slightly longer for a GIF
+            }, 900);
+        }
+        function createBloodDrips() {
+            const bloodBg = document.getElementById('blood-background');
+            const dripCount = 18;
+            for (let i = 0; i < dripCount; i++) {
+                const drip = document.createElement('div');
+                drip.className = 'blood-drip';
+                const leftPos = Math.random() * 100;
+                const duration = 6 + Math.random() * 8;
+                const delay = Math.random() * 10;
+                const height = 40 + Math.random() * 80;
+                drip.style.left = `${leftPos}%`;
+                drip.style.animationDuration = `${duration}s`;
+                drip.style.animationDelay = `${delay}s`;
+                drip.style.height = `${height}px`;
+                bloodBg.appendChild(drip);
+            }
         }
         renderProducts();
         renderCart();
+        createBloodDrips();
         window.addEventListener('click', (event) => {
             const modal = document.getElementById('modal');
             if (event.target === modal) {
